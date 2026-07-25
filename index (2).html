@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/organic-0e87f5e9-baef-47a9-93ea-125c3c6eef3b/styles.css">
+  <script src="_ds/organic-0e87f5e9-baef-47a9-93ea-125c3c6eef3b/_ds_bundle.js"></script>
+  <style>
+    a { color: var(--color-accent-700); }
+    a:hover { color: var(--color-accent-900); }
+    body { margin: 0; }
+  </style>
+</helmet>
+<x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" hint-size="1320px,860px" width="{{ 1320 }}" height="{{ 860 }}" url="algo-visualizer.app">
+  <div style="width:100%;min-height:100%;box-sizing:border-box;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body);padding:32px 40px 40px;display:flex;flex-direction:column;gap:22px;">
+
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap;">
+      <div>
+        <h1 style="font-family:var(--font-heading);font-size:34px;margin:0;">{{ algoTitle }}</h1>
+        <p style="margin:8px 0 0;color:var(--color-neutral-700);font-size:15px;max-width:560px;line-height:1.55;">{{ algoDesc }}</p>
+        <div style="display:flex;gap:10px;margin-top:14px;">
+          <span class="tag tag-accent" style="white-space:nowrap;">TIME {{ algoTime }}</span>
+          <span class="tag tag-accent-2" style="white-space:nowrap;">SPACE {{ algoSpace }}</span>
+        </div>
+      </div>
+      <div class="field" style="min-width:300px;">
+        <label id="algo-label" style="display:block;font-size:12px;text-transform:uppercase;letter-spacing:0.08em;opacity:0.6;margin-bottom:8px;">Algorithm</label>
+        <div class="seg" role="radiogroup" aria-labelledby="algo-label">
+          <label class="seg-opt"><input type="radio" name="algo" checked="{{ isMerge }}" onChange="{{ selectMerge }}" />Merge Sort</label>
+          <label class="seg-opt"><input type="radio" name="algo" checked="{{ isQuick }}" onChange="{{ selectQuick }}" />Quick Sort</label>
+          <label class="seg-opt"><input type="radio" name="algo" checked="{{ isBinary }}" onChange="{{ selectBinary }}" />Binary Search</label>
+        </div>
+        <label style="display:block;font-size:12px;text-transform:uppercase;letter-spacing:0.08em;opacity:0.6;margin:14px 0 8px;">Custom array (comma-separated)</label>
+        <div style="display:flex;gap:8px;">
+          <input class="input" value="{{ arrayInputValue }}" onChange="{{ onArrayInputChange }}" style="flex:1;" />
+          <sc-if value="{{ isBinary }}" hint-placeholder-val="{{ false }}">
+            <input class="input" value="{{ targetInputValue }}" onChange="{{ onTargetInputChange }}" style="width:70px;" placeholder="target" />
+          </sc-if>
+          <button class="btn btn-secondary" onClick="{{ applyCustom }}">Apply</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:var(--color-neutral-200);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);padding:36px 32px 26px;position:relative;overflow:hidden;">
+      <div style="display:flex;align-items:flex-end;justify-content:center;gap:18px;min-height:230px;">
+        <sc-for list="{{ crates }}" as="c" hint-placeholder-count="8">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px;width:60px;opacity:{{ c.opacity }};transition:opacity 0.3s ease;">
+            <div style="height:34px;display:flex;align-items:flex-end;justify-content:center;">
+              <sc-if value="{{ c.pointer }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;flex-direction:column;align-items:center;">
+                  <span style="font-family:var(--font-heading);font-size:12px;color:var(--color-accent-2-700);">k</span>
+                  <div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:9px solid var(--color-accent-2-500);"></div>
+                </div>
+              </sc-if>
+            </div>
+            <div style="width:56px;height:{{ c.height }}px;background:{{ c.color }};border-radius:10px 10px 6px 6px;box-shadow:inset 0 3px 0 rgba(255,255,255,0.28), 0 6px 14px rgba(32,30,29,0.18);display:flex;align-items:flex-start;justify-content:center;padding-top:8px;transition:height 0.3s ease, background 0.3s ease;">
+              <span style="font-family:var(--font-heading);font-size:16px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,0.25);">{{ c.value }}</span>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="height:14px;background:var(--color-neutral-400);border-radius:0 0 var(--radius-lg) var(--radius-lg);margin:14px -32px -26px;box-shadow:inset 0 6px 10px rgba(32,30,29,0.15);"></div>
+      <p style="text-align:center;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:15px;color:var(--color-accent-700);margin:18px 0 0;">{{ stepNote }}</p>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <button class="btn btn-secondary btn-icon" onClick="{{ stepBack }}" aria-label="Previous step">‹</button>
+      <button class="btn btn-primary" onClick="{{ togglePlay }}">{{ playLabel }}</button>
+      <button class="btn btn-secondary btn-icon" onClick="{{ stepForward }}" aria-label="Next step">›</button>
+      <button class="btn btn-ghost" onClick="{{ reset }}">Reset</button>
+      <div style="flex:1;"></div>
+      <span style="font-size:13px;color:var(--color-neutral-700);">Step {{ stepDisplay }} / {{ totalSteps }}</span>
+      <input type="range" min="1" max="4" step="1" value="{{ speedValue }}" onChange="{{ onSpeedChange }}" style="width:130px;accent-color:var(--color-accent-500);" />
+    </div>
+
+    <sc-if value="{{ showCode }}" hint-placeholder-val="{{ true }}">
+      <div style="background:var(--color-neutral-900);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);padding:22px 26px;overflow:auto;">
+        <sc-for list="{{ codeLines }}" as="ln" hint-placeholder-count="14">
+          <div style="display:flex;gap:16px;padding:2px 8px;border-radius:6px;background:{{ ln.bg }};">
+            <span style="width:20px;text-align:right;color:var(--color-neutral-500);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;user-select:none;">{{ ln.num }}</span>
+            <span style="white-space:pre;color:var(--color-neutral-100);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13.5px;">{{ ln.text }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+
+  </div>
+</x-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1320,&quot;height&quot;:860},&quot;defaultAlgorithm&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;merge&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;merge&quot;,&quot;quick&quot;,&quot;binary&quot;],&quot;section&quot;:&quot;Behavior&quot;},&quot;autoPlay&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behavior&quot;},&quot;showCode&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behavior&quot;}}">
+function mergeSortSteps(input) {
+  const a = input.slice();
+  const steps = [];
+  function ms(lo, hi) {
+    steps.push({ array: a.slice(), active: [], line: 6, note: `split [${lo}, ${hi})`, range: [lo, hi] });
+    if (hi - lo <= 1) { steps.push({ array: a.slice(), active: [], line: 4, note: 'base case reached', range: [lo, hi] }); return; }
+    const mid = (lo + hi) >> 1;
+    ms(lo, mid); ms(mid, hi);
+    merge(lo, mid, hi);
+  }
+  function merge(lo, mid, hi) {
+    const aux = a.slice(lo, hi);
+    let i = 0, j = mid - lo;
+    steps.push({ array: a.slice(), active: [lo, mid, hi - 1], line: 12, note: 'copy range into buffer', range: [lo, hi] });
+    for (let k = lo; k < hi; k++) {
+      steps.push({ array: a.slice(), active: [k], line: 15, note: 'compare buffer heads', range: [lo, hi], pointerIndex: k });
+      if (j >= hi - lo || (i < mid - lo && aux[i] <= aux[j])) {
+        a[k] = aux[i]; i++;
+        steps.push({ array: a.slice(), active: [k], line: 16, note: `a[${k}] = ${a[k]}`, range: [lo, hi], pointerIndex: k });
+      } else {
+        a[k] = aux[j]; j++;
+        steps.push({ array: a.slice(), active: [k], line: 19, note: `a[${k}] = ${a[k]}`, range: [lo, hi], pointerIndex: k });
+      }
+    }
+  }
+  ms(0, a.length);
+  steps.push({ array: a.slice(), active: [], line: null, note: 'array sorted', final: true });
+  return steps;
+}
+
+function quickSortSteps(input) {
+  const a = input.slice();
+  const steps = [];
+  function qs(lo, hi) {
+    steps.push({ array: a.slice(), active: [], line: 4, note: `quick_sort(${lo}, ${hi})` });
+    if (lo < hi) {
+      const p = partition(lo, hi);
+      qs(lo, p - 1); qs(p + 1, hi);
+    }
+  }
+  function partition(lo, hi) {
+    const pivot = a[hi]; let i = lo - 1;
+    steps.push({ array: a.slice(), active: [hi], line: 10, note: `pivot = ${pivot}` });
+    for (let j = lo; j < hi; j++) {
+      steps.push({ array: a.slice(), active: [j, hi], line: 13, note: `compare a[${j}] with pivot` });
+      if (a[j] <= pivot) {
+        i++;
+        const t = a[i]; a[i] = a[j]; a[j] = t;
+        steps.push({ array: a.slice(), active: [i, j], line: 15, note: `swap a[${i}], a[${j}]` });
+      }
+    }
+    const t = a[i + 1]; a[i + 1] = a[hi]; a[hi] = t;
+    steps.push({ array: a.slice(), active: [i + 1, hi], line: 16, note: `swap a[${i + 1}], a[${hi}]` });
+    return i + 1;
+  }
+  qs(0, a.length - 1);
+  steps.push({ array: a.slice(), active: [], line: null, note: 'array sorted', final: true });
+  return steps;
+}
+
+function binarySearchSteps(input, target) {
+  const a = input.slice();
+  const steps = [];
+  let lo = 0, hi = a.length - 1;
+  steps.push({ array: a.slice(), active: [], line: 2, note: `lo = ${lo}, hi = ${hi}`, range: [lo, hi + 1] });
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    steps.push({ array: a.slice(), active: [mid], line: 4, note: `mid = ${mid}`, range: [lo, hi + 1] });
+    if (a[mid] === target) {
+      steps.push({ array: a.slice(), active: [mid], line: 6, note: `found target at index ${mid}`, range: [lo, hi + 1], final: true });
+      return steps;
+    } else if (a[mid] < target) {
+      steps.push({ array: a.slice(), active: [mid], line: 8, note: 'target is larger — go right', range: [lo, hi + 1] });
+      lo = mid + 1;
+    } else {
+      steps.push({ array: a.slice(), active: [mid], line: 10, note: 'target is smaller — go left', range: [lo, hi + 1] });
+      hi = mid - 1;
+    }
+  }
+  steps.push({ array: a.slice(), active: [], line: 11, note: 'not found' });
+  return steps;
+}
+
+const ALGO_META = {
+  merge: {
+    title: 'MERGE SORT',
+    desc: 'Recursively splits the array in half, sorts each side, then merges them via an auxiliary buffer.',
+    time: 'O(n log n)', space: 'O(n)',
+    code: [
+      'def merge_sort(a, lo=0, hi=None):',
+      '    if hi is None:',
+      '        hi = len(a)',
+      '    if hi - lo <= 1:',
+      '        return',
+      '    mid = (lo + hi) // 2',
+      '    merge_sort(a, lo, mid)',
+      '    merge_sort(a, mid, hi)',
+      '    merge(a, lo, mid, hi)',
+      '',
+      'def merge(a, lo, mid, hi):',
+      '    aux = a[lo:hi]',
+      '    i, j = 0, mid - lo',
+      '    for k in range(lo, hi):',
+      '        if j >= hi - lo or (i < mid - lo and aux[i] <= aux[j]):',
+      '            a[k] = aux[i]',
+      '            i += 1',
+      '        else:',
+      '            a[k] = aux[j]',
+      '            j += 1',
+    ],
+    defaultArray: [1, 3, 5, 7, 4, 2, 8, 6],
+    generate: (arr) => mergeSortSteps(arr || [1, 3, 5, 7, 4, 2, 8, 6]),
+  },
+  quick: {
+    title: 'QUICK SORT',
+    desc: 'Picks a pivot, partitions the array around it in place, then recursively sorts each side.',
+    time: 'O(n log n) avg', space: 'O(log n)',
+    code: [
+      'def quick_sort(a, lo=0, hi=None):',
+      '    if hi is None:',
+      '        hi = len(a) - 1',
+      '    if lo < hi:',
+      '        p = partition(a, lo, hi)',
+      '        quick_sort(a, lo, p - 1)',
+      '        quick_sort(a, p + 1, hi)',
+      '',
+      'def partition(a, lo, hi):',
+      '    pivot = a[hi]',
+      '    i = lo - 1',
+      '    for j in range(lo, hi):',
+      '        if a[j] <= pivot:',
+      '            i += 1',
+      '            a[i], a[j] = a[j], a[i]',
+      '    a[i + 1], a[hi] = a[hi], a[i + 1]',
+      '    return i + 1',
+    ],
+    defaultArray: [1, 3, 5, 7, 4, 2, 8, 6],
+    generate: (arr) => quickSortSteps(arr || [1, 3, 5, 7, 4, 2, 8, 6]),
+  },
+  binary: {
+    title: 'BINARY SEARCH',
+    desc: 'Repeatedly halves a sorted array, comparing the midpoint to the target to discard the wrong half.',
+    time: 'O(log n)', space: 'O(1)',
+    code: [
+      'def binary_search(a, target):',
+      '    lo, hi = 0, len(a) - 1',
+      '    while lo <= hi:',
+      '        mid = (lo + hi) // 2',
+      '        if a[mid] == target:',
+      '            return mid',
+      '        elif a[mid] < target:',
+      '            lo = mid + 1',
+      '        else:',
+      '            hi = mid - 1',
+      '    return -1',
+    ],
+    defaultArray: [1, 2, 3, 4, 5, 6, 7, 8],
+    defaultTarget: 6,
+    generate: (arr, target) => binarySearchSteps((arr || [1, 2, 3, 4, 5, 6, 7, 8]).slice().sort((a, b) => a - b), target ?? 6),
+  },
+};
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    const algo = ['merge', 'quick', 'binary'].includes(props.defaultAlgorithm) ? props.defaultAlgorithm : 'merge';
+    this.state = {
+      algorithm: algo,
+      steps: ALGO_META[algo].generate(),
+      stepIndex: 0,
+      playing: false,
+      speed: 2,
+      arrayInput: ALGO_META[algo].defaultArray.join(', '),
+      targetInput: String(ALGO_META[algo].defaultTarget ?? ''),
+    };
+  }
+
+  componentDidMount() {
+    if (this.props.autoPlay) this.play();
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.timer);
+  }
+
+  selectAlgorithm(name) {
+    if (name === this.state.algorithm) return;
+    this.pause();
+    this.setState({
+      algorithm: name,
+      steps: ALGO_META[name].generate(),
+      stepIndex: 0,
+      arrayInput: ALGO_META[name].defaultArray.join(', '),
+      targetInput: String(ALGO_META[name].defaultTarget ?? ''),
+    });
+  }
+
+  applyCustom() {
+    const nums = this.state.arrayInput.split(',').map((s) => parseInt(s.trim(), 10)).filter((n) => !isNaN(n));
+    if (!nums.length) return;
+    const arr = nums.slice(0, 10);
+    const target = parseInt(this.state.targetInput, 10);
+    this.pause();
+    const meta = ALGO_META[this.state.algorithm];
+    this.setState({
+      steps: meta.generate(arr, isNaN(target) ? meta.defaultTarget : target),
+      stepIndex: 0,
+    });
+  }
+
+  play() {
+    clearInterval(this.timer);
+    this.setState({ playing: true });
+    this.timer = setInterval(() => {
+      this.setState((s) => {
+        if (s.stepIndex >= s.steps.length - 1) {
+          clearInterval(this.timer);
+          return { playing: false };
+        }
+        return { stepIndex: s.stepIndex + 1 };
+      });
+    }, 950 / this.state.speed);
+  }
+
+  pause() {
+    clearInterval(this.timer);
+    this.setState({ playing: false });
+  }
+
+  togglePlay() {
+    if (this.state.playing) this.pause(); else this.play();
+  }
+
+  stepForward() {
+    this.pause();
+    this.setState((s) => ({ stepIndex: Math.min(s.stepIndex + 1, s.steps.length - 1) }));
+  }
+
+  stepBack() {
+    this.pause();
+    this.setState((s) => ({ stepIndex: Math.max(s.stepIndex - 1, 0) }));
+  }
+
+  reset() {
+    this.pause();
+    this.setState({ stepIndex: 0 });
+  }
+
+  renderVals() {
+    const algo = this.state.algorithm;
+    const meta = ALGO_META[algo];
+    const steps = this.state.steps;
+    const idx = Math.min(this.state.stepIndex, steps.length - 1);
+    const step = steps[idx];
+
+    const crates = step.array.map((v, i) => {
+      let color = 'var(--color-neutral-500)';
+      if (step.final) color = 'var(--color-accent-2-500)';
+      else if (step.active && step.active.includes(i)) color = 'var(--color-accent-500)';
+      const inRange = !step.range || (i >= step.range[0] && i < step.range[1]);
+      return {
+        value: v,
+        height: 44 + v * 16,
+        color,
+        opacity: step.final || inRange ? 1 : 0.4,
+        pointer: algo === 'merge' && step.pointerIndex === i,
+      };
+    });
+
+    const codeLines = meta.code.map((text, i) => {
+      const num = i + 1;
+      return { num, text: text.length ? text : ' ', bg: step.line === num ? 'rgba(198,113,57,0.28)' : 'transparent' };
+    });
+
+    return {
+      algoTitle: meta.title,
+      algoDesc: meta.desc,
+      algoTime: meta.time,
+      algoSpace: meta.space,
+      isMerge: algo === 'merge',
+      isQuick: algo === 'quick',
+      isBinary: algo === 'binary',
+      selectMerge: () => this.selectAlgorithm('merge'),
+      selectQuick: () => this.selectAlgorithm('quick'),
+      selectBinary: () => this.selectAlgorithm('binary'),
+      crates,
+      stepNote: step.note || '',
+      stepDisplay: idx + 1,
+      totalSteps: steps.length,
+      playLabel: this.state.playing ? 'Pause' : 'Play',
+      togglePlay: () => this.togglePlay(),
+      stepBack: () => this.stepBack(),
+      stepForward: () => this.stepForward(),
+      reset: () => this.reset(),
+      speedValue: this.state.speed,
+      onSpeedChange: (e) => this.setState({ speed: Number(e.target.value) }),
+      codeLines,
+      showCode: this.props.showCode ?? true,
+      arrayInputValue: this.state.arrayInput,
+      targetInputValue: this.state.targetInput,
+      onArrayInputChange: (e) => this.setState({ arrayInput: e.target.value }),
+      onTargetInputChange: (e) => this.setState({ targetInput: e.target.value }),
+      applyCustom: () => this.applyCustom(),
+    };
+  }
+}
+</script>
+</body>
+</html>
